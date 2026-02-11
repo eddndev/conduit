@@ -14,6 +14,7 @@ import * as path from 'path';
 import QRCode from 'qrcode';
 import { prisma } from './postgres.service';
 import { queueService } from './queue.service';
+import { MessageBatcher } from './batcher.service';
 import { SessionStatus } from '@prisma/client';
 import pino from 'pino';
 
@@ -231,9 +232,9 @@ export class BaileysService {
 
             if (!message) return;
 
-            // 4. Enqueue for n8n forwarding (instead of internal FlowEngine)
+            // 4. Enqueue for n8n forwarding (with optional batching)
             if (!message.forwardedAt) {
-                await queueService.enqueueForN8n({
+                const n8nPayload = {
                     botId: bot.id,
                     botName: bot.name,
                     sessionId: session.id,
@@ -244,7 +245,15 @@ export class BaileysService {
                     type: msgType as any,
                     timestamp: new Date().toISOString(),
                     externalId: message.externalId
-                });
+                };
+
+                if (bot.responseDelay && bot.responseDelay > 0) {
+                    // Batch: buffer and forward after delay
+                    await MessageBatcher.add(n8nPayload, bot.responseDelay);
+                } else {
+                    // Instant: forward immediately
+                    await queueService.enqueueForN8n(n8nPayload);
+                }
             }
 
         } catch (e) {

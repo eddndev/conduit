@@ -1,5 +1,6 @@
 import { Queue } from "bullmq";
 import type { N8nWebhookPayload } from "./n8n.service";
+import type { BatchPayload } from "./batcher.service";
 
 export const QUEUE_NAME = "conduit-message-queue";
 
@@ -20,6 +21,19 @@ class QueueService {
      */
     async enqueueForN8n(payload: N8nWebhookPayload) {
         return this.queue.add("forward_to_n8n", payload, {
+            attempts: 3,
+            backoff: {
+                type: "exponential",
+                delay: 2000
+            }
+        });
+    }
+
+    /**
+     * Enqueue a batch of messages for forwarding to n8n.
+     */
+    async enqueueForN8nBatch(payload: BatchPayload) {
+        return this.queue.add("forward_to_n8n_batch", payload, {
             attempts: 3,
             backoff: {
                 type: "exponential",

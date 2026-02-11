@@ -37,6 +37,7 @@ model Bot {
   // n8n Integration
   webhookUrl  String?  // n8n webhook URL to forward incoming messages
   apiKey      String?  @unique // API key for n8n to authenticate when sending messages back
+  responseDelay Int    @default(0) // Seconds to wait before forwarding messages (0 = instant, >0 = batch)
 
   sessions    Session[]
 

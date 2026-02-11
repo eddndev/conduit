@@ -95,7 +95,7 @@ export const botController = new Elysia({ prefix: "/bots" })
     .get("/:id/webhook", async ({ params: { id }, set }) => {
         const bot = await prisma.bot.findUnique({
             where: { id },
-            select: { id: true, name: true, webhookUrl: true, apiKey: true }
+            select: { id: true, name: true, webhookUrl: true, apiKey: true, responseDelay: true }
         });
         if (!bot) {
             set.status = 404;
@@ -104,20 +104,25 @@ export const botController = new Elysia({ prefix: "/bots" })
         return bot;
     })
     .put("/:id/webhook", async ({ params: { id }, body, set }) => {
-        const { webhookUrl } = body;
+        const { webhookUrl, responseDelay } = body;
         try {
+            const data: any = { webhookUrl };
+            if (responseDelay !== undefined) {
+                data.responseDelay = responseDelay;
+            }
             const bot = await prisma.bot.update({
                 where: { id },
-                data: { webhookUrl }
+                data
             });
-            return { success: true, webhookUrl: bot.webhookUrl };
+            return { success: true, webhookUrl: bot.webhookUrl, responseDelay: bot.responseDelay };
         } catch (e: any) {
             set.status = 500;
             return { error: "Failed to update webhook" };
         }
     }, {
         body: t.Object({
-            webhookUrl: t.String()
+            webhookUrl: t.String(),
+            responseDelay: t.Optional(t.Number())
         })
     })
     // Regenerate API Key

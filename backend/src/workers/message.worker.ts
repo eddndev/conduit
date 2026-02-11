@@ -1,6 +1,7 @@
 import { Worker, Job } from "bullmq";
 import { QUEUE_NAME } from "../services/queue.service";
 import { N8nService, type N8nWebhookPayload } from "../services/n8n.service";
+import type { BatchPayload } from "../services/batcher.service";
 
 const REDIS_URL = process.env['REDIS_URL'] || "redis://localhost:6379";
 
@@ -18,6 +19,15 @@ export const startConduitWorker = () => {
                         throw new Error(`Failed to forward message ${payload.messageId} to n8n`);
                     }
                     break;
+
+                case "forward_to_n8n_batch":
+                    const batchPayload = job.data as BatchPayload;
+                    const batchSuccess = await N8nService.forwardBatch(batchPayload);
+                    if (!batchSuccess) {
+                        throw new Error(`Failed to forward batch (${batchPayload.messageCount} msgs) for ${batchPayload.from}`);
+                    }
+                    break;
+
                 default:
                     console.warn(`[Worker] Unknown job name: ${job.name}`);
             }
@@ -41,3 +51,4 @@ export const startConduitWorker = () => {
 
     return worker;
 };
+

@@ -46,6 +46,8 @@ export default {
     copy: "Copiar",
     copied: "¡Copiado!",
     save: "Guardar",
+    response_delay: "Retraso de Respuesta",
+    response_delay_hint: "0 = instantáneo. Aumenta para agrupar mensajes antes de enviar a n8n.",
 
     // Actions
     save_changes: "Guardar Cambios",

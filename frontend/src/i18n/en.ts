@@ -46,6 +46,8 @@ export default {
     copy: "Copy",
     copied: "Copied!",
     save: "Save",
+    response_delay: "Response Delay",
+    response_delay_hint: "0 = instant. Set higher to batch group messages before forwarding to n8n.",
 
     // Actions
     save_changes: "Save Changes",
