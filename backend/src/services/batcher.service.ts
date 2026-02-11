@@ -19,11 +19,14 @@ export interface BatchMessage {
     type: string;
     timestamp: string;
     externalId: string;
+    mediaBase64?: string;
+    mediaMimetype?: string;
 }
 
 export interface BatchPayload {
     botId: string;
     botName: string;
+    apiKey?: string;
     from: string;
     sessionId: string;
     type: "BATCH";
@@ -63,6 +66,8 @@ export class MessageBatcher {
             type: payload.type,
             timestamp: payload.timestamp,
             externalId: payload.externalId,
+            mediaBase64: payload.mediaBase64,
+            mediaMimetype: payload.mediaMimetype,
         };
 
         await redis.rpush(key, JSON.stringify(batchMessage));
@@ -71,6 +76,7 @@ export class MessageBatcher {
         await redis.set(metaKey(payload.botId, payload.from), JSON.stringify({
             botName: payload.botName,
             sessionId: payload.sessionId,
+            apiKey: payload.apiKey,
         }));
 
         // Set TTL on the Redis key to auto-cleanup if timer somehow fails (delay * 3)
@@ -115,7 +121,7 @@ export class MessageBatcher {
         const rawMeta = await redis.get(mKey);
         await redis.del(mKey);
 
-        const meta = rawMeta ? JSON.parse(rawMeta) : { botName: "Unknown", sessionId: "" };
+        const meta = rawMeta ? JSON.parse(rawMeta) : { botName: "Unknown", sessionId: "", apiKey: "" };
         const messages: BatchMessage[] = rawMessages.map((raw) => JSON.parse(raw));
 
         console.log(`[Batcher] Flushing ${messages.length} messages for ${jid} on bot ${botId}`);
@@ -124,6 +130,7 @@ export class MessageBatcher {
         const batchPayload: BatchPayload = {
             botId,
             botName: meta.botName,
+            apiKey: meta.apiKey,
             from: jid,
             sessionId: meta.sessionId,
             type: "BATCH",

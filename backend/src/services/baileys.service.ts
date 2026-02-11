@@ -4,6 +4,7 @@ import makeWASocket, {
     DisconnectReason,
     makeCacheableSignalKeyStore,
     fetchLatestBaileysVersion,
+    downloadMediaMessage,
     type WASocket,
     type WAMessage,
     jidNormalizedUser
@@ -148,8 +149,26 @@ export class BaileysService {
 
         const msgType = msg.message.imageMessage ? 'IMAGE' :
             msg.message.audioMessage ? 'AUDIO' :
-                msg.message.videoMessage ? 'VIDEO' :
-                    msg.message.documentMessage ? 'DOCUMENT' : 'TEXT';
+                msg.message.pttMessage ? 'PTT' :
+                    msg.message.videoMessage ? 'VIDEO' :
+                        msg.message.documentMessage ? 'DOCUMENT' : 'TEXT';
+
+        // Download audio/PTT media as base64
+        let mediaBase64: string | undefined;
+        let mediaMimetype: string | undefined;
+
+        if (msgType === 'AUDIO' || msgType === 'PTT') {
+            try {
+                const buffer = await downloadMediaMessage(msg, 'buffer', {});
+                mediaBase64 = (buffer as Buffer).toString('base64');
+                mediaMimetype = msg.message.audioMessage?.mimetype ||
+                    msg.message.pttMessage?.mimetype ||
+                    'audio/ogg; codecs=opus';
+                console.log(`[Baileys] Downloaded ${msgType} (${Math.round(mediaBase64.length / 1024)}KB base64) from ${from}`);
+            } catch (dlErr: any) {
+                console.error(`[Baileys] Failed to download audio from ${from}:`, dlErr.message);
+            }
+        }
 
         console.log(`[${new Date().toISOString()}] [Baileys] Received ${msgType} from ${from} (${msg.pushName}) [MsgID: ${msg.key.id}] on Bot ${botId}: ${content.substring(0, 50)}...`);
 
@@ -237,6 +256,7 @@ export class BaileysService {
                 const n8nPayload = {
                     botId: bot.id,
                     botName: bot.name,
+                    apiKey: bot.apiKey || "",
                     sessionId: session.id,
                     messageId: message.id,
                     from,
@@ -244,7 +264,9 @@ export class BaileysService {
                     content,
                     type: msgType as any,
                     timestamp: new Date().toISOString(),
-                    externalId: message.externalId
+                    externalId: message.externalId,
+                    mediaBase64,
+                    mediaMimetype,
                 };
 
                 if (bot.responseDelay && bot.responseDelay > 0) {

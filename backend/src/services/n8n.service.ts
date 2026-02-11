@@ -13,6 +13,7 @@ export interface N8nWebhookPayload {
     // Bot context
     botId: string;
     botName: string;
+    apiKey?: string;        // Bot's API key for n8n to authenticate /send responses
 
     // Session context
     sessionId: string;
@@ -22,8 +23,10 @@ export interface N8nWebhookPayload {
     from: string;           // JID of the sender (e.g., 521234567890@s.whatsapp.net)
     pushName: string;       // Contact display name
     content: string;
-    type: "TEXT" | "IMAGE" | "AUDIO" | "VIDEO" | "DOCUMENT";
+    type: "TEXT" | "IMAGE" | "AUDIO" | "VIDEO" | "DOCUMENT" | "PTT";
     mediaUrl?: string;
+    mediaBase64?: string;   // Base64-encoded media data (audio, image, etc.)
+    mediaMimetype?: string; // MIME type of the media (e.g., audio/ogg; codecs=opus)
 
     // Metadata
     timestamp: string;
