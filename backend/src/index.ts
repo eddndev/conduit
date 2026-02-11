@@ -52,6 +52,8 @@ import { cors } from "@elysiajs/cors";
 const app = new Elysia()
     .use(cors({
         origin: [
+            'https://conduit.eddn.dev',
+            'https://conduit-api.eddn.dev',
             'http://localhost:4321',
             'http://localhost:5173'
         ],
