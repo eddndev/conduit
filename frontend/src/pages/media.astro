@@ -1,0 +1,384 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Media">
+    <main class="space-y-8" x-data="mediaGallery">
+        <!-- Header -->
+        <header
+            class="flex justify-between items-center border-b border-white/10 pb-6 relative"
+        >
+            <div class="cross-marker -bottom-[5px] -left-[5px]"></div>
+            <div class="cross-marker -bottom-[5px] -right-[5px]"></div>
+
+            <h1
+                class="text-3xl font-bold tracking-tighter uppercase relative z-10"
+                x-text="$t('media')"
+            >
+                Media
+            </h1>
+
+            <div class="flex items-center gap-3">
+                <span
+                    class="text-xs font-mono text-gray-500"
+                    x-text="`${files.length} ${$t('files')}`"></span>
+            </div>
+        </header>
+
+        <!-- Upload Zone -->
+        <div
+            class="relative border-2 border-dashed border-white/10 hover:border-brand-purple/50 transition-all duration-300 p-8 text-center cursor-pointer group"
+            :class="dragging ? 'border-brand-purple bg-brand-purple/5 scale-[1.01]' : ''"
+            @dragover.prevent="dragging = true"
+            @dragleave.prevent="dragging = false"
+            @drop.prevent="handleDrop($event)"
+            @click="$refs.fileInput.click()"
+        >
+            <div class="cross-marker -top-[2px] -left-[2px]"></div>
+            <div class="cross-marker -top-[2px] -right-[2px]"></div>
+            <div class="cross-marker -bottom-[2px] -left-[2px]"></div>
+            <div class="cross-marker -bottom-[2px] -right-[2px]"></div>
+
+            <input
+                type="file"
+                x-ref="fileInput"
+                @change="handleFileSelect($event)"
+                multiple
+                accept="image/*,audio/*,video/*,.pdf,.doc,.docx,.xls,.xlsx"
+                class="hidden"
+            />
+
+            <div class="space-y-3">
+                <svg
+                    class="w-10 h-10 mx-auto text-gray-600 group-hover:text-brand-purple transition-colors"
+                    :class="dragging ? 'text-brand-purple scale-110' : ''"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="1.5"
+                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                    ></path>
+                </svg>
+                <p
+                    class="text-sm text-gray-400 font-mono"
+                    x-text="$t('drop_files')"
+                >
+                </p>
+                <p
+                    class="text-[10px] text-gray-600 font-mono uppercase tracking-widest"
+                >
+                    IMG · PDF · AUDIO · VIDEO · DOC
+                </p>
+            </div>
+
+            <!-- Upload Progress -->
+            <template x-if="uploading">
+                <div
+                    class="absolute inset-0 bg-black/80 flex items-center justify-center backdrop-blur-sm"
+                >
+                    <div class="text-center space-y-3">
+                        <div
+                            class="w-8 h-8 border-2 border-brand-purple border-t-transparent rounded-full animate-spin mx-auto"
+                        >
+                        </div>
+                        <p
+                            class="text-xs font-mono text-brand-purple"
+                            x-text="$t('uploading')"
+                        >
+                        </p>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- Success Toast -->
+        <div
+            x-show="uploadSuccess"
+            x-transition.opacity.duration.300ms
+            class="fixed bottom-6 right-6 bg-green-500/20 border border-green-500/30 text-green-400 px-4 py-2 text-xs font-mono z-50"
+            style="display: none;"
+        >
+            ✓ <span x-text="$t('upload_success')"></span>
+        </div>
+
+        <!-- Copy Toast -->
+        <div
+            x-show="justCopied"
+            x-transition.opacity.duration.300ms
+            class="fixed bottom-6 right-6 bg-brand-purple/20 border border-brand-purple/30 text-brand-purple px-4 py-2 text-xs font-mono z-50"
+            style="display: none;"
+        >
+            ✓ <span x-text="$t('copied')"></span>
+        </div>
+
+        <!-- Loading State -->
+        <template x-if="loading">
+            <div class="flex items-center justify-center py-16">
+                <div
+                    class="w-6 h-6 border-2 border-brand-purple border-t-transparent rounded-full animate-spin"
+                >
+                </div>
+            </div>
+        </template>
+
+        <!-- Empty State -->
+        <template x-if="!loading && files.length === 0">
+            <div class="text-center py-16">
+                <p
+                    class="text-gray-500 font-mono text-sm"
+                    x-text="$t('no_files')"
+                >
+                </p>
+            </div>
+        </template>
+
+        <!-- File Grid -->
+        <div
+            x-show="!loading && files.length > 0"
+            class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
+        >
+            <template x-for="file in files" :key="file.name">
+                <div
+                    class="group relative bg-brand-panel/50 border border-white/5 hover:border-brand-purple/30 transition-all overflow-hidden"
+                >
+                    <!-- Preview -->
+                    <div
+                        class="aspect-square bg-black/30 flex items-center justify-center overflow-hidden"
+                    >
+                        <!-- Image preview -->
+                        <template x-if="isImage(file.name)">
+                            <img
+                                :src="getFileUrl(file.url)"
+                                :alt="file.name"
+                                class="w-full h-full object-cover"
+                                loading="lazy"
+                            />
+                        </template>
+
+                        <!-- Non-image icon -->
+                        <template x-if="!isImage(file.name)">
+                            <div class="text-center space-y-2">
+                                <span
+                                    class="text-3xl"
+                                    x-text="getFileIcon(file.name)"></span>
+                                <p
+                                    class="text-[10px] text-gray-500 font-mono uppercase"
+                                    x-text="getExtension(file.name)"
+                                >
+                                </p>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Info Bar -->
+                    <div class="p-2 space-y-1">
+                        <p
+                            class="text-[10px] text-gray-400 font-mono truncate"
+                            x-text="file.name"
+                        >
+                        </p>
+                        <p
+                            class="text-[9px] text-gray-600 font-mono"
+                            x-text="formatSize(file.size)"
+                        >
+                        </p>
+                    </div>
+
+                    <!-- Hover Actions -->
+                    <div
+                        class="absolute inset-0 bg-black/70 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3"
+                    >
+                        <!-- Copy URL -->
+                        <button
+                            @click.stop="copyUrl(file.url)"
+                            class="p-2 bg-brand-purple/80 hover:bg-brand-purple text-white rounded-full transition-colors"
+                            :title="$t('copy_url')"
+                        >
+                            <svg
+                                class="w-4 h-4"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
+                                ></path>
+                            </svg>
+                        </button>
+
+                        <!-- Delete -->
+                        <button
+                            @click.stop="deleteFile(file.name)"
+                            class="p-2 bg-red-500/80 hover:bg-red-500 text-white rounded-full transition-colors"
+                            :title="$t('delete_file')"
+                        >
+                            <svg
+                                class="w-4 h-4"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                ></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </main>
+</Layout>
+
+<script>
+    declare const Alpine: any;
+    import { ApiClient } from "../lib/api";
+
+    document.addEventListener("alpine:init", () => {
+        Alpine.data("mediaGallery", () => ({
+            files: [] as Array<{
+                name: string;
+                url: string;
+                size: number;
+                createdAt: string;
+            }>,
+            loading: true,
+            uploading: false,
+            uploadSuccess: false,
+            justCopied: false,
+            dragging: false,
+
+            async init() {
+                await this.loadFiles();
+            },
+
+            async loadFiles() {
+                this.loading = true;
+                try {
+                    const result = await ApiClient.get("/upload/list");
+                    this.files = result.files || [];
+                } catch (e) {
+                    console.error("Failed to load files:", e);
+                } finally {
+                    this.loading = false;
+                }
+            },
+
+            async handleDrop(event: DragEvent) {
+                this.dragging = false;
+                const files = event.dataTransfer?.files;
+                if (files) await this.uploadFiles(files);
+            },
+
+            async handleFileSelect(event: Event) {
+                const input = event.target as HTMLInputElement;
+                if (input.files) await this.uploadFiles(input.files);
+                input.value = "";
+            },
+
+            async uploadFiles(fileList: FileList) {
+                this.uploading = true;
+                try {
+                    for (const file of fileList) {
+                        const formData = new FormData();
+                        formData.append("file", file);
+
+                        await fetch(
+                            (import.meta.env.PUBLIC_API_URL ||
+                                "http://localhost:8081") + "/upload",
+                            {
+                                method: "POST",
+                                body: formData,
+                                credentials: "include",
+                            },
+                        );
+                    }
+
+                    await this.loadFiles();
+                    this.uploadSuccess = true;
+                    setTimeout(() => {
+                        this.uploadSuccess = false;
+                    }, 2000);
+                } catch (e) {
+                    console.error("Upload failed:", e);
+                    alert("Upload failed");
+                } finally {
+                    this.uploading = false;
+                }
+            },
+
+            getFileUrl(relativeUrl: string): string {
+                return (
+                    (import.meta.env.PUBLIC_API_URL ||
+                        "http://localhost:8081") + relativeUrl
+                );
+            },
+
+            async copyUrl(relativeUrl: string) {
+                const fullUrl = this.getFileUrl(relativeUrl);
+                try {
+                    await navigator.clipboard.writeText(fullUrl);
+                } catch {
+                    const ta = document.createElement("textarea");
+                    ta.value = fullUrl;
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand("copy");
+                    document.body.removeChild(ta);
+                }
+                this.justCopied = true;
+                setTimeout(() => {
+                    this.justCopied = false;
+                }, 2000);
+            },
+
+            async deleteFile(name: string) {
+                // @ts-ignore
+                if (!confirm(this.$t("delete_confirm") || "Delete this file?"))
+                    return;
+                try {
+                    await ApiClient.delete(`/upload/files/${name}`);
+                    await this.loadFiles();
+                } catch (e) {
+                    console.error("Delete failed:", e);
+                    alert("Delete failed");
+                }
+            },
+
+            isImage(name: string): boolean {
+                return /\.(jpg|jpeg|png|gif|webp|svg|bmp)$/i.test(name);
+            },
+
+            getExtension(name: string): string {
+                return name.split(".").pop()?.toUpperCase() || "FILE";
+            },
+
+            getFileIcon(name: string): string {
+                const ext = name.split(".").pop()?.toLowerCase() || "";
+                if (["mp3", "ogg", "wav", "m4a", "opus"].includes(ext))
+                    return "🎵";
+                if (["mp4", "webm", "mov", "avi"].includes(ext)) return "🎬";
+                if (["pdf"].includes(ext)) return "📄";
+                if (["doc", "docx"].includes(ext)) return "📝";
+                if (["xls", "xlsx"].includes(ext)) return "📊";
+                return "📎";
+            },
+
+            formatSize(bytes: number): string {
+                if (bytes < 1024) return bytes + " B";
+                if (bytes < 1048576) return (bytes / 1024).toFixed(1) + " KB";
+                return (bytes / 1048576).toFixed(1) + " MB";
+            },
+        }));
+    });
+</script>

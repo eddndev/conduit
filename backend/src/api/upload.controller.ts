@@ -87,4 +87,30 @@ export const uploadController = new Elysia({ prefix: "/upload" })
         }
 
         return file;
+    })
+    .delete("/files/:name", async ({ params: { name }, set }) => {
+        try {
+            const { unlink } = await import("fs/promises");
+            const filePath = join(UPLOAD_DIR, name);
+
+            // Prevent path traversal
+            if (name.includes("..") || name.includes("/")) {
+                set.status = 400;
+                return { error: "Invalid filename" };
+            }
+
+            const file = Bun.file(filePath);
+            if (file.size === 0) {
+                set.status = 404;
+                return { error: "File not found" };
+            }
+
+            await unlink(filePath);
+            console.log(`[Upload] Deleted: ${name}`);
+            return { success: true, deleted: name };
+        } catch (e: any) {
+            console.error("[Upload] Delete error:", e);
+            set.status = 500;
+            return { error: e.message || "Delete failed" };
+        }
     });

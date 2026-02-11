@@ -26,6 +26,7 @@ export default {
     // Sidebar
     menu: "Menú",
     bots: "Bots",
+    media: "Medios",
     settings: "Configuración",
 
     // Bot Pages
@@ -64,4 +65,14 @@ export default {
     edit_bot: "Editar Bot",
     back: "Volver",
     saving: "Guardando...",
+
+    // Media Gallery
+    files: "archivos",
+    drop_files: "Arrastra archivos aquí o haz clic para subir",
+    uploading: "Subiendo...",
+    upload_success: "Subido exitosamente",
+    copy_url: "Copiar URL",
+    delete_file: "Eliminar",
+    delete_confirm: "¿Eliminar este archivo?",
+    no_files: "No hay archivos subidos",
 };
