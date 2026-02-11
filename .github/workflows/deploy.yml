@@ -1,4 +1,4 @@
-name: Deploy Sentinel (Native)
+name: Deploy Conduit
 
 on:
   push:
@@ -18,13 +18,13 @@ jobs:
           script: |
             set -e
 
-            # Ensure Bun is in path (Standard location for bun install script)
+            # Ensure Bun is in path
             export BUN_INSTALL="$HOME/.bun"
             export PATH="$BUN_INSTALL/bin:$PATH"
 
-            echo "Starting Deployment..."
+            echo "🔗 Starting Conduit Deployment..."
             
-            cd /var/www/sentinel
+            cd ${{ secrets.DEPLOY_DIR }}
 
             echo "Pulling latest code..."
             git fetch --all
@@ -33,20 +33,18 @@ jobs:
             echo "Building Backend..."
             cd backend
             bun install --production
-            bunx prisma migrate deploy
-            bunx prisma generate
-            bun run prisma/seed.ts
+            bunx prisma@5.12.0 migrate deploy
+            bunx prisma@5.12.0 generate
             bun run build
             
             echo "Building Frontend..."
             cd ../frontend
             bun install
-            # Ensure PUBLIC_API_URL is set if needed for the build
-            export PUBLIC_API_URL="https://api-sentinel.angelviajero.com.mx"
+            export PUBLIC_API_URL="${{ secrets.PUBLIC_API_URL }}"
             bun run build
             
             echo "Restarting PM2..."
             cd ..
             pm2 startOrReload ecosystem.config.cjs
 
-            echo "Deployment Complete!"
+            echo "✅ Conduit Deployment Complete!"
