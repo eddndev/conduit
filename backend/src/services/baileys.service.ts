@@ -205,6 +205,7 @@ export class BaileysService {
             if (!bot) return;
 
             // 2. Resolve Session
+            let isNewContact = false;
             let session = await prisma.session.findUnique({
                 where: {
                     botId_identifier: {
@@ -215,6 +216,7 @@ export class BaileysService {
             });
 
             if (!session) {
+                isNewContact = true;
                 console.log(`[Baileys] New Session for user ${from} on bot ${bot.name}`);
                 try {
                     session = await prisma.session.create({
@@ -294,6 +296,7 @@ export class BaileysService {
                     externalId: message.externalId,
                     mediaBase64,
                     mediaMimetype,
+                    isNewContact,
                 };
 
                 if (bot.responseDelay && bot.responseDelay > 0) {
