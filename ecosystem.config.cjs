@@ -4,7 +4,7 @@ module.exports = {
       name: "conduit-backend",
       cwd: "./backend",
       script: "bun",
-      args: "run dist/index.js",
+      args: "run --env-file=.env dist/index.js",
       instances: 1,
       autorestart: true,
       watch: false,
