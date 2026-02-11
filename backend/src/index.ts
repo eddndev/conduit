@@ -4,7 +4,7 @@ import { Redis } from "ioredis";
 
 // --- Configuration ---
 const REDIS_URL = process.env['REDIS_URL'] || "redis://localhost:6379";
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 8081;
 
 // --- Services ---
 const redis = new Redis(REDIS_URL, {
