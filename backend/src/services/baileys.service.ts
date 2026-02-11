@@ -142,7 +142,7 @@ export class BaileysService {
         }
 
         // Extract content
-        const content = msg.message.conversation ||
+        let content = msg.message.conversation ||
             msg.message.extendedTextMessage?.text ||
             msg.message.imageMessage?.caption ||
             "";
@@ -153,18 +153,45 @@ export class BaileysService {
                     msg.message.videoMessage ? 'VIDEO' :
                         msg.message.documentMessage ? 'DOCUMENT' : 'TEXT';
 
-        // Download audio/PTT media as base64
+        // Download audio/PTT media and transcribe with Whisper
         let mediaBase64: string | undefined;
         let mediaMimetype: string | undefined;
 
         if (msgType === 'AUDIO' || msgType === 'PTT') {
             try {
-                const buffer = await downloadMediaMessage(msg, 'buffer', {});
-                mediaBase64 = (buffer as Buffer).toString('base64');
+                const buffer = await downloadMediaMessage(msg, 'buffer', {}) as Buffer;
+                mediaBase64 = buffer.toString('base64');
                 mediaMimetype = msg.message.audioMessage?.mimetype ||
                     msg.message.pttMessage?.mimetype ||
                     'audio/ogg; codecs=opus';
-                console.log(`[Baileys] Downloaded ${msgType} (${Math.round(mediaBase64.length / 1024)}KB base64) from ${from}`);
+                console.log(`[Baileys] Downloaded ${msgType} (${Math.round(buffer.length / 1024)}KB) from ${from}`);
+
+                // Transcribe with Whisper if API key is available
+                const openaiKey = process.env['OPENAI_API_KEY'];
+                if (openaiKey) {
+                    try {
+                        const formData = new FormData();
+                        formData.append('file', new Blob([buffer], { type: mediaMimetype }), 'audio.ogg');
+                        formData.append('model', 'whisper-1');
+
+                        const whisperRes = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+                            method: 'POST',
+                            headers: { 'Authorization': `Bearer ${openaiKey}` },
+                            body: formData,
+                            signal: AbortSignal.timeout(30000)
+                        });
+
+                        if (whisperRes.ok) {
+                            const { text } = await whisperRes.json() as { text: string };
+                            content = `[🎤 Audio transcription]: ${text}`;
+                            console.log(`[Baileys] Whisper transcription from ${from}: ${text.substring(0, 80)}...`);
+                        } else {
+                            console.error(`[Baileys] Whisper API returned ${whisperRes.status}`);
+                        }
+                    } catch (whisperErr: any) {
+                        console.error(`[Baileys] Whisper transcription failed:`, whisperErr.message);
+                    }
+                }
             } catch (dlErr: any) {
                 console.error(`[Baileys] Failed to download audio from ${from}:`, dlErr.message);
             }
