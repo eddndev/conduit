@@ -1,0 +1,94 @@
+// Conduit - WhatsApp ↔ n8n Gateway
+// Prisma Schema
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SessionStatus {
+  CONNECTED
+  DISCONNECTED
+  AUTHENTICATING
+  FAILED
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  passwordHash  String
+  fullName      String?
+  isActive      Boolean  @default(true)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Bot {
+  id          String   @id @default(uuid())
+  name        String
+  identifier  String   @unique // Phone number for WhatsApp
+
+  // n8n Integration
+  webhookUrl  String?  // n8n webhook URL to forward incoming messages
+  apiKey      String?  @unique // API key for n8n to authenticate when sending messages back
+
+  sessions    Session[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Session {
+  id            String        @id @default(uuid())
+  identifier    String        // User phone/JID
+
+  botId         String
+  bot           Bot           @relation(fields: [botId], references: [id], onDelete: Cascade)
+
+  name          String?
+  status        SessionStatus @default(DISCONNECTED)
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  messages      Message[]
+
+  @@unique([botId, identifier]) // Unique user per bot
+}
+
+model Message {
+  id            String    @id @default(uuid())
+  externalId    String    @unique
+
+  sessionId     String
+  session       Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  sender        String
+  fromMe        Boolean   @default(false)
+  content       String?   @db.Text
+  type          String    // TEXT, IMAGE, AUDIO, VIDEO, DOCUMENT, PTT
+  metadata      Json?
+
+  isProcessed   Boolean   @default(false)
+  forwardedAt   DateTime? // When the message was forwarded to n8n
+
+  createdAt     DateTime  @default(now())
+
+  @@index([externalId])
+  @@index([sessionId])
+}
+
+model CommandLog {
+  id        String   @id @default(uuid())
+  name      String
+  user      String
+  status    String
+  result    String?  @db.Text
+  createdAt DateTime @default(now())
+}
