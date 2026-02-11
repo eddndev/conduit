@@ -31,6 +31,7 @@ export interface N8nWebhookPayload {
     // Metadata
     timestamp: string;
     externalId: string;
+    isNewContact?: boolean;
 }
 
 export class N8nService {

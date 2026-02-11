@@ -33,6 +33,7 @@ export interface BatchPayload {
     messageCount: number;
     messages: BatchMessage[];
     timestamp: string;
+    isNewContact?: boolean;
 }
 
 // In-memory timer map: "botId:jid" -> NodeJS.Timeout
@@ -77,6 +78,7 @@ export class MessageBatcher {
             botName: payload.botName,
             sessionId: payload.sessionId,
             apiKey: payload.apiKey,
+            isNewContact: payload.isNewContact,
         }));
 
         // Set TTL on the Redis key to auto-cleanup if timer somehow fails (delay * 3)
@@ -121,7 +123,7 @@ export class MessageBatcher {
         const rawMeta = await redis.get(mKey);
         await redis.del(mKey);
 
-        const meta = rawMeta ? JSON.parse(rawMeta) : { botName: "Unknown", sessionId: "", apiKey: "" };
+        const meta = rawMeta ? JSON.parse(rawMeta) : { botName: "Unknown", sessionId: "", apiKey: "", isNewContact: false };
         const messages: BatchMessage[] = rawMessages.map((raw) => JSON.parse(raw));
 
         console.log(`[Batcher] Flushing ${messages.length} messages for ${jid} on bot ${botId}`);
@@ -137,6 +139,7 @@ export class MessageBatcher {
             messageCount: messages.length,
             messages,
             timestamp: new Date().toISOString(),
+            isNewContact: meta.isNewContact,
         };
 
         await queueService.enqueueForN8nBatch(batchPayload);
