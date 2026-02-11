@@ -14,7 +14,7 @@ import Layout from "../layouts/Layout.astro";
             <h1
                 class="text-3xl font-bold tracking-tighter uppercase relative z-10"
             >
-                Sentinel <span
+                Conduit <span
                     class="text-brand-purple text-xs tracking-[0.3em] align-top ml-2"
                     >v1.0.0</span
                 >
@@ -75,33 +75,35 @@ import Layout from "../layouts/Layout.astro";
                 </div>
             </a>
 
-            <!-- Total Flows -->
+            <!-- Connected Bots -->
             <div
                 class="p-6 bg-brand-panel/50 border border-white/5 backdrop-blur-sm relative"
             >
                 <h2
                     class="text-xs text-brand-purple uppercase tracking-widest mb-4"
-                    x-text="$t('total_flows')"
+                    x-text="$t('connected_bots')"
                 >
-                    Total Flows
+                    Connected Bots
                 </h2>
-                <div class="text-4xl font-mono font-light">
+                <div class="text-4xl font-mono font-light text-green-400">
                     <span x-show="loading" class="animate-pulse">...</span>
-                    <span x-show="!loading" x-text="stats.flowCount">0</span>
+                    <span x-show="!loading" x-text="stats.connectedCount"
+                        >0</span
+                    >
                 </div>
             </div>
 
-            <!-- Executions (Placeholder) -->
+            <!-- Messages Today -->
             <div
                 class="p-6 bg-brand-panel/50 border border-white/5 backdrop-blur-sm relative"
             >
                 <h2
                     class="text-xs text-brand-purple uppercase tracking-widest mb-4"
-                    x-text="$t('executions')"
+                    x-text="$t('messages_today')"
                 >
-                    Executions
+                    Messages Today
                 </h2>
-                <div class="text-4xl font-mono font-light text-green-400">
+                <div class="text-4xl font-mono font-light text-blue-400">
                     --
                 </div>
                 <p class="text-[10px] text-gray-500 font-mono mt-2">
@@ -143,12 +145,12 @@ import Layout from "../layouts/Layout.astro";
                     <div>
                         <h3
                             class="font-bold uppercase tracking-tight group-hover:text-brand-purple transition-colors"
-                            x-text="$t('manage_flows')"
+                            x-text="$t('manage_bots')"
                         >
-                            Manage Bots & Flows
+                            Manage Bots
                         </h3>
                         <p class="text-xs text-gray-500 font-mono mt-1">
-                            Configure your messaging bots
+                            Configure your WhatsApp bots & webhooks
                         </p>
                     </div>
                 </a>
@@ -201,17 +203,27 @@ import Layout from "../layouts/Layout.astro";
             error: false,
             stats: {
                 botCount: 0,
-                flowCount: 0,
+                connectedCount: 0,
             },
 
             async init() {
                 try {
-                    const [bots, flows] = await Promise.all([
-                        ApiClient.get("/bots"),
-                        ApiClient.get("/flows"),
-                    ]);
+                    const bots = await ApiClient.get("/bots");
                     this.stats.botCount = bots.length;
-                    this.stats.flowCount = flows.length;
+
+                    // Check how many bots are connected
+                    let connected = 0;
+                    for (const bot of bots) {
+                        try {
+                            const status = await ApiClient.get(
+                                `/bots/${bot.id}/status`,
+                            );
+                            if (status.connected) connected++;
+                        } catch (e) {
+                            // Silent fail for individual status checks
+                        }
+                    }
+                    this.stats.connectedCount = connected;
                 } catch (e) {
                     console.error("Dashboard Stats Error:", e);
                     this.error = true;
