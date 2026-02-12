@@ -40,9 +40,26 @@ model Bot {
   responseDelay Int    @default(0) // Seconds to wait before forwarding messages (0 = instant, >0 = batch)
 
   sessions    Session[]
+  clients     Client[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model Client {
+  id        String   @id @default(uuid())
+  botId     String
+  bot       Bot      @relation(fields: [botId], references: [id], onDelete: Cascade)
+  jid       String   // WhatsApp JID
+  name      String?  // pushName
+  curp      String?
+  phone     String?
+  email     String?
+  status    String   @default("PENDING") // PENDING | READY | ATTENDED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([botId, jid])
 }
 
 model Session {

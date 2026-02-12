@@ -58,6 +58,19 @@ export const ApiClient = {
         return res.json();
     },
 
+    async patch(endpoint: string, body: any) {
+        const res = await fetch(`${API_URL}${endpoint}`, {
+            method: "PATCH",
+            headers: getHeaders(),
+            body: JSON.stringify(body),
+        });
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.error || `API Error: ${res.statusText}`);
+        }
+        return res.json();
+    },
+
     async uploadFile(file: File) {
         const formData = new FormData();
         formData.append("file", file);

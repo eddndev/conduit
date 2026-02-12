@@ -47,6 +47,7 @@ import { uploadController } from "./api/upload.controller";
 import { botController } from "./api/bot.controller";
 import { sendController } from "./api/send.controller";
 import { authController } from "./api/auth.controller";
+import { clientController } from "./api/client.controller";
 import { cors } from "@elysiajs/cors";
 
 const app = new Elysia()
@@ -58,13 +59,14 @@ const app = new Elysia()
             'http://localhost:5173'
         ],
         allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
     }))
     .use(webhookController)
     .use(uploadController)
     .use(botController)
     .use(sendController)
     .use(authController)
+    .use(clientController)
     .get("/", () => "Conduit Gateway Active")
     .get("/health", () => ({ status: "ok", timestamp: new Date().toISOString() }))
     .get("/info", () => ({

@@ -27,6 +27,7 @@ export default {
     menu: "Menu",
     bots: "Bots",
     media: "Media",
+    clients: "Clients",
     settings: "Settings",
 
     // Bot Pages
@@ -75,4 +76,16 @@ export default {
     delete_file: "Delete",
     delete_confirm: "Delete this file?",
     no_files: "No files uploaded yet",
+
+    // Clients
+    client_name: "Name",
+    phone: "Phone",
+    email: "Email",
+    status: "Status",
+    date: "Date",
+    no_clients: "No clients registered",
+    mark_ready: "Ready",
+    mark_attended: "Attended",
+    reactivate_ai: "Reactivate AI",
+    delete_confirm: "Are you sure?",
 };

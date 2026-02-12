@@ -105,6 +105,7 @@ export class BaileysService {
                 for (const msg of messages) {
                     if (!msg.message) continue;
                     if (msg.key.remoteJid === 'status@broadcast') continue;
+                    if (msg.key.fromMe) continue; // Skip own messages — prevents n8n loops when human replies
 
                     // @ts-ignore
                     await this.handleIncomingMessage(botId, msg);
@@ -203,6 +204,15 @@ export class BaileysService {
             // 1. Resolve Bot
             const bot = await prisma.bot.findUnique({ where: { id: botId } });
             if (!bot) return;
+
+            // 1.5 Check if this contact is already handed off to a human
+            const existingClient = await prisma.client.findUnique({
+                where: { botId_jid: { botId: bot.id, jid: from } }
+            });
+            if (existingClient && (existingClient.status === 'READY' || existingClient.status === 'ATTENDED')) {
+                console.log(`[Baileys] Skipping ${from} — already ${existingClient.status}, handled by human`);
+                return;
+            }
 
             // 2. Resolve Session
             let isNewContact = false;
