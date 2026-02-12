@@ -5,13 +5,13 @@ const translations: any = { en, es };
 
 export const getLocale = () => {
     if (typeof localStorage !== 'undefined') {
-        return localStorage.getItem('sentinel_lang') || 'es';
+        return localStorage.getItem('conduit_lang') || 'es';
     }
     return 'es';
 };
 
 export const setLocale = (lang: string) => {
-    localStorage.setItem('sentinel_lang', lang);
+    localStorage.setItem('conduit_lang', lang);
     window.location.reload(); // Simple reload for now
 };
 

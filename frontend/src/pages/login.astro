@@ -6,7 +6,7 @@ import "../styles/global.css";
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width" />
-        <title>Login | Sentinel</title>
+        <title>Login | Conduit</title>
     </head>
     <body
         class="bg-slate-950 min-h-screen flex items-center justify-center font-mono text-slate-200 antialiased relative overflow-hidden"
@@ -28,7 +28,7 @@ import "../styles/global.css";
             <!-- Header -->
             <div class="mb-12 text-center">
                 <h1 class="text-4xl font-bold tracking-tighter uppercase mb-2">
-                    Sentinel <span
+                    Conduit <span
                         class="text-brand-purple text-xs tracking-[0.3em] align-top"
                         >ID</span
                     >
@@ -70,7 +70,7 @@ import "../styles/global.css";
                             type="email"
                             x-model="email"
                             class="w-full bg-black/40 border border-white/10 text-white p-3 text-sm focus:border-brand-purple/50 focus:outline-none focus:ring-1 focus:ring-brand-purple/50 transition-all placeholder:text-white/20"
-                            placeholder="admin@sentinel.com"
+                            placeholder="admin@conduit.cc"
                             required
                         />
                     </div>
@@ -116,10 +116,12 @@ import "../styles/global.css";
 
         <script>
             import { ApiClient as api } from "../lib/api";
-            
+
             // Auth Helpers
-            const setToken = (token: string) => localStorage.setItem('token', token);
-            const setUser = (user: any) => localStorage.setItem('user', JSON.stringify(user));
+            const setToken = (token: string) =>
+                localStorage.setItem("token", token);
+            const setUser = (user: any) =>
+                localStorage.setItem("user", JSON.stringify(user));
 
             document.addEventListener("alpine:init", () => {
                 Alpine.data("loginForm", () => ({
@@ -130,27 +132,31 @@ import "../styles/global.css";
 
                     async submit() {
                         this.loading = true;
-                        this.errorMessage = ''; // Changed from this.error to match x-data
+                        this.errorMessage = ""; // Changed from this.error to match x-data
 
                         try {
-                            const response = await api.post('/auth/login', {
+                            const response = await api.post("/auth/login", {
                                 email: this.email,
-                                password: this.password
+                                password: this.password,
                             });
-                            
+
                             if (response.token) {
                                 setToken(response.token);
                                 setUser(response.user);
-                                window.location.href = '/';
+                                window.location.href = "/";
                             } else {
-                                this.errorMessage = 'Login failed: No token received';
+                                this.errorMessage =
+                                    "Login failed: No token received";
                             }
                         } catch (err) {
-                            this.errorMessage = err instanceof Error ? err.message : 'Login failed';
+                            this.errorMessage =
+                                err instanceof Error
+                                    ? err.message
+                                    : "Login failed";
                         } finally {
                             this.loading = false;
                         }
-                    }
+                    },
                 }));
             });
         </script>
