@@ -5,32 +5,33 @@ export const clientController = new Elysia({ prefix: "/clients" })
     // Create or update a client (called by n8n tool)
     .post("/", async ({ body, set }) => {
         try {
+            // Sanitize strings (n8n may add trailing tabs/whitespace)
+            const botId = body.botId.trim();
+            const jid = body.jid.trim();
+
             const client = await prisma.client.upsert({
                 where: {
-                    botId_jid: {
-                        botId: body.botId,
-                        jid: body.jid,
-                    },
+                    botId_jid: { botId, jid },
                 },
                 update: {
-                    name: body.name ?? undefined,
-                    curp: body.curp ?? undefined,
-                    phone: body.phone ?? undefined,
-                    email: body.email ?? undefined,
-                    llaveEmail: body.llaveEmail ?? undefined,
-                    llavePassword: body.llavePassword ?? undefined,
-                    status: body.status ?? undefined,
+                    name: body.name?.trim() || undefined,
+                    curp: body.curp?.trim() || undefined,
+                    phone: body.phone?.trim() || undefined,
+                    email: body.email?.trim() || undefined,
+                    llaveEmail: body.llaveEmail?.trim() || undefined,
+                    llavePassword: body.llavePassword?.trim() || undefined,
+                    status: body.status?.trim() || undefined,
                 },
                 create: {
-                    botId: body.botId,
-                    jid: body.jid,
-                    name: body.name,
-                    curp: body.curp,
-                    phone: body.phone,
-                    email: body.email,
-                    llaveEmail: body.llaveEmail,
-                    llavePassword: body.llavePassword,
-                    status: body.status || "PENDING",
+                    botId,
+                    jid,
+                    name: body.name?.trim(),
+                    curp: body.curp?.trim(),
+                    phone: body.phone?.trim(),
+                    email: body.email?.trim(),
+                    llaveEmail: body.llaveEmail?.trim(),
+                    llavePassword: body.llavePassword?.trim(),
+                    status: body.status?.trim() || "PENDING",
                 },
             });
 
