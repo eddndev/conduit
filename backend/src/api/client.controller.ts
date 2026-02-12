@@ -17,6 +17,8 @@ export const clientController = new Elysia({ prefix: "/clients" })
                     curp: body.curp ?? undefined,
                     phone: body.phone ?? undefined,
                     email: body.email ?? undefined,
+                    llaveEmail: body.llaveEmail ?? undefined,
+                    llavePassword: body.llavePassword ?? undefined,
                     status: body.status ?? undefined,
                 },
                 create: {
@@ -26,6 +28,8 @@ export const clientController = new Elysia({ prefix: "/clients" })
                     curp: body.curp,
                     phone: body.phone,
                     email: body.email,
+                    llaveEmail: body.llaveEmail,
+                    llavePassword: body.llavePassword,
                     status: body.status || "PENDING",
                 },
             });
@@ -44,6 +48,8 @@ export const clientController = new Elysia({ prefix: "/clients" })
             curp: t.Optional(t.String()),
             phone: t.Optional(t.String()),
             email: t.Optional(t.String()),
+            llaveEmail: t.Optional(t.String()),
+            llavePassword: t.Optional(t.String()),
             status: t.Optional(t.String()),
         }),
     })
@@ -76,6 +82,8 @@ export const clientController = new Elysia({ prefix: "/clients" })
                     curp: body.curp ?? undefined,
                     phone: body.phone ?? undefined,
                     email: body.email ?? undefined,
+                    llaveEmail: body.llaveEmail ?? undefined,
+                    llavePassword: body.llavePassword ?? undefined,
                     name: body.name ?? undefined,
                 },
             });
@@ -90,6 +98,8 @@ export const clientController = new Elysia({ prefix: "/clients" })
             curp: t.Optional(t.String()),
             phone: t.Optional(t.String()),
             email: t.Optional(t.String()),
+            llaveEmail: t.Optional(t.String()),
+            llavePassword: t.Optional(t.String()),
             name: t.Optional(t.String()),
         }),
     })

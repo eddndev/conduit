@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.PUBLIC_API_URL || (import.meta.env.DEV ? "http://localhost:8080" : "https://conduit-api.eddn.dev");
+const API_URL = import.meta.env.PUBLIC_API_URL || (import.meta.env.DEV ? "http://localhost:8080" : "https://conduit-api.w-gateway.cc");
 
 const getHeaders = () => {
     const headers: Record<string, string> = {

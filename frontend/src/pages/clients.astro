@@ -40,7 +40,10 @@ import Layout from "../layouts/Layout.astro";
         <!-- Loading -->
         <template x-if="loading">
             <div class="flex items-center justify-center py-16">
-                <div class="w-6 h-6 border-2 border-brand-purple border-t-transparent rounded-full animate-spin"></div>
+                <div
+                    class="w-6 h-6 border-2 border-brand-purple border-t-transparent rounded-full animate-spin"
+                >
+                </div>
             </div>
         </template>
 
@@ -50,22 +53,26 @@ import Layout from "../layouts/Layout.astro";
                 <p
                     class="text-gray-500 font-mono text-sm"
                     x-text="$t('no_clients')"
-                ></p>
+                >
+                </p>
             </div>
         </template>
 
         <!-- Clients Table -->
-        <div
-            x-show="!loading && clients.length > 0"
-            class="overflow-x-auto"
-        >
+        <div x-show="!loading && clients.length > 0" class="overflow-x-auto">
             <table class="w-full text-left">
                 <thead>
-                    <tr class="border-b border-white/10 text-[10px] text-gray-500 font-mono uppercase tracking-widest">
-                        <th class="py-3 px-4" x-text="$t('client_name')">Name</th>
+                    <tr
+                        class="border-b border-white/10 text-[10px] text-gray-500 font-mono uppercase tracking-widest"
+                    >
+                        <th class="py-3 px-4" x-text="$t('client_name')"
+                            >Name</th
+                        >
                         <th class="py-3 px-4">CURP</th>
                         <th class="py-3 px-4" x-text="$t('phone')">Phone</th>
                         <th class="py-3 px-4" x-text="$t('email')">Email</th>
+                        <th class="py-3 px-4">Llave Email</th>
+                        <th class="py-3 px-4">Llave Pass</th>
                         <th class="py-3 px-4">Bot</th>
                         <th class="py-3 px-4" x-text="$t('status')">Status</th>
                         <th class="py-3 px-4" x-text="$t('date')">Date</th>
@@ -74,12 +81,30 @@ import Layout from "../layouts/Layout.astro";
                 </thead>
                 <tbody>
                     <template x-for="client in clients" :key="client.id">
-                        <tr class="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
-                            <td class="py-3 px-4 text-sm font-mono" x-text="client.name || '—'"></td>
-                            <td class="py-3 px-4 text-xs font-mono text-gray-400" x-text="client.curp || '—'"></td>
-                            <td class="py-3 px-4 text-xs font-mono text-gray-400" x-text="client.phone || '—'"></td>
-                            <td class="py-3 px-4 text-xs font-mono text-gray-400" x-text="client.email || '—'"></td>
-                            <td class="py-3 px-4 text-xs font-mono text-brand-purple" x-text="client.bot?.name || '—'"></td>
+                        <tr
+                            class="border-b border-white/5 hover:bg-white/[0.02] transition-colors"
+                        >
+                            <td
+                                class="py-3 px-4 text-sm font-mono"
+                                x-text="client.name || '—'"></td>
+                            <td
+                                class="py-3 px-4 text-xs font-mono text-gray-400"
+                                x-text="client.curp || '—'"></td>
+                            <td
+                                class="py-3 px-4 text-xs font-mono text-gray-400"
+                                x-text="client.phone || '—'"></td>
+                            <td
+                                class="py-3 px-4 text-xs font-mono text-gray-400"
+                                x-text="client.email || '—'"></td>
+                            <td
+                                class="py-3 px-4 text-xs font-mono text-gray-400"
+                                x-text="client.llaveEmail || '—'"></td>
+                            <td
+                                class="py-3 px-4 text-xs font-mono text-gray-400"
+                                x-text="client.llavePassword || '—'"></td>
+                            <td
+                                class="py-3 px-4 text-xs font-mono text-brand-purple"
+                                x-text="client.bot?.name || '—'"></td>
                             <td class="py-3 px-4">
                                 <span
                                     class="px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider border"
@@ -88,19 +113,22 @@ import Layout from "../layouts/Layout.astro";
                                         'text-green-400 border-green-500/30 bg-green-500/10': client.status === 'READY',
                                         'text-gray-400 border-gray-500/30 bg-gray-500/10': client.status === 'ATTENDED'
                                     }"
-                                    x-text="client.status"
-                                ></span>
+                                    x-text="client.status"></span>
                             </td>
-                            <td class="py-3 px-4 text-[10px] font-mono text-gray-500" x-text="new Date(client.createdAt).toLocaleDateString()"></td>
+                            <td
+                                class="py-3 px-4 text-[10px] font-mono text-gray-500"
+                                x-text="new Date(client.createdAt).toLocaleDateString()"
+                            ></td>
                             <td class="py-3 px-4">
                                 <div class="flex gap-2">
                                     <!-- Mark as READY -->
-                                    <template x-if="client.status === 'PENDING'">
+                                    <template
+                                        x-if="client.status === 'PENDING'"
+                                    >
                                         <button
                                             @click="updateStatus(client.id, 'READY')"
                                             class="text-[10px] font-mono text-green-400 hover:text-green-300 border border-green-500/30 px-2 py-0.5 hover:bg-green-500/10 transition-colors"
-                                            x-text="$t('mark_ready')"
-                                        ></button>
+                                            x-text="$t('mark_ready')"></button>
                                     </template>
 
                                     <!-- Mark as ATTENDED -->
@@ -113,7 +141,9 @@ import Layout from "../layouts/Layout.astro";
                                     </template>
 
                                     <!-- Reset to PENDING (re-enable AI) -->
-                                    <template x-if="client.status === 'READY' || client.status === 'ATTENDED'">
+                                    <template
+                                        x-if="client.status === 'READY' || client.status === 'ATTENDED'"
+                                    >
                                         <button
                                             @click="updateStatus(client.id, 'PENDING')"
                                             class="text-[10px] font-mono text-yellow-400 hover:text-yellow-300 border border-yellow-500/30 px-2 py-0.5 hover:bg-yellow-500/10 transition-colors"
@@ -143,7 +173,8 @@ import Layout from "../layouts/Layout.astro";
             class="fixed bottom-6 right-6 bg-green-500/20 border border-green-500/30 text-green-400 px-4 py-2 text-xs font-mono z-50"
             style="display: none;"
             x-text="toast"
-        ></div>
+        >
+        </div>
     </main>
 </Layout>
 
@@ -166,8 +197,11 @@ import Layout from "../layouts/Layout.astro";
                 this.loading = true;
                 try {
                     const params = new URLSearchParams();
-                    if (this.filterStatus) params.set("status", this.filterStatus);
-                    const result = await ApiClient.get(`/clients?${params.toString()}`);
+                    if (this.filterStatus)
+                        params.set("status", this.filterStatus);
+                    const result = await ApiClient.get(
+                        `/clients?${params.toString()}`,
+                    );
                     this.clients = result.clients || [];
                 } catch (e) {
                     console.error("Failed to load clients:", e);
@@ -200,7 +234,9 @@ import Layout from "../layouts/Layout.astro";
 
             showToast(msg: string) {
                 this.toast = msg;
-                setTimeout(() => { this.toast = ""; }, 2000);
+                setTimeout(() => {
+                    this.toast = "";
+                }, 2000);
             },
         }));
     });

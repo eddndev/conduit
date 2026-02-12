@@ -55,6 +55,8 @@ model Client {
   curp      String?
   phone     String?
   email     String?
+  llaveEmail    String?  // Llave CDMX login email
+  llavePassword String?  // Llave CDMX login password
   status    String   @default("PENDING") // PENDING | READY | ATTENDED
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
