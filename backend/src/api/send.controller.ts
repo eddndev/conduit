@@ -11,14 +11,20 @@ import { BaileysService } from "../services/baileys.service";
 
 export const sendController = new Elysia({ prefix: "/send" })
     .post("/", async ({ body, headers, set }) => {
-        const apiKey = headers["x-api-key"];
+        const apiKey = headers["x-api-key"]?.trim();
 
         if (!apiKey) {
             set.status = 401;
             return { error: "Missing X-API-Key header" };
         }
 
-        const { botId, to, type, content, mediaUrl, caption } = body;
+        // Sanitize strings (n8n may add trailing tabs/whitespace)
+        const botId = body.botId.trim();
+        const to = body.to.trim();
+        const type = body.type.trim();
+        const content = body.content?.trim();
+        const mediaUrl = body.mediaUrl?.trim();
+        const caption = body.caption?.trim();
 
         // 1. Validate API Key against the bot
         const bot = await prisma.bot.findUnique({
