@@ -74,6 +74,7 @@ export class BaileysService {
             chatLabels.set(botId, new Map());
 
             sock.ev.on('labels.edit', (label) => {
+                console.log(`[Baileys] [Labels] label.edit for Bot ${botId}:`, JSON.stringify(label));
                 const labels = botLabels.get(botId)!;
                 if (label.deleted) {
                     labels.delete(label.id);
@@ -83,6 +84,7 @@ export class BaileysService {
             });
 
             sock.ev.on('labels.association', ({ association, type }) => {
+                console.log(`[Baileys] [Labels] label.association for Bot ${botId}:`, JSON.stringify({ association, type }));
                 if (association.type !== 'label_jid') return;
                 const chats = chatLabels.get(botId)!;
                 const chatId = jidNormalizedUser(association.chatId);
