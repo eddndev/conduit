@@ -127,6 +127,15 @@ export class BaileysService {
                 } else if (connection === 'open') {
                     console.log(`[Baileys] Connection opened for Bot ${botId}`);
                     qrCodes.delete(botId);
+
+                    // Sync app state to load labels
+                    try {
+                        // @ts-ignore - resyncAppState is exposed but not in types
+                        await sock.resyncAppState(['regular'], false);
+                        console.log(`[Baileys] [Labels] App state synced for Bot ${botId}, labels: ${JSON.stringify([...(botLabels.get(botId)?.entries() || [])])}`);
+                    } catch (err: any) {
+                        console.error(`[Baileys] [Labels] Failed to sync app state for Bot ${botId}:`, err.message);
+                    }
                 }
             });
 
