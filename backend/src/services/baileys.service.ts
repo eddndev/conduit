@@ -28,6 +28,10 @@ const qrCodes = new Map<string, string>();
 
 const AUTH_DIR = 'auth_info_baileys';
 
+// Label tracking per bot
+const botLabels = new Map<string, Map<string, string>>();       // botId -> (labelId -> labelName)
+const chatLabels = new Map<string, Map<string, Set<string>>>(); // botId -> (chatJid -> Set<labelId>)
+
 export class BaileysService {
 
     static async startSession(botId: string) {
@@ -64,6 +68,31 @@ export class BaileysService {
             sessions.set(botId, sock);
 
             sock.ev.on('creds.update', saveCreds);
+
+            // Track labels for IGNORAR filtering
+            botLabels.set(botId, new Map());
+            chatLabels.set(botId, new Map());
+
+            sock.ev.on('labels.edit', (label) => {
+                const labels = botLabels.get(botId)!;
+                if (label.deleted) {
+                    labels.delete(label.id);
+                } else {
+                    labels.set(label.id, label.name);
+                }
+            });
+
+            sock.ev.on('labels.association', ({ association, type }) => {
+                if (association.type !== 'label_jid') return;
+                const chats = chatLabels.get(botId)!;
+                const chatId = jidNormalizedUser(association.chatId);
+                if (type === 'add') {
+                    if (!chats.has(chatId)) chats.set(chatId, new Set());
+                    chats.get(chatId)!.add(association.labelId);
+                } else {
+                    chats.get(chatId)?.delete(association.labelId);
+                }
+            });
 
             sock.ev.on('connection.update', async (update) => {
                 const { connection, lastDisconnect, qr } = update;
@@ -140,6 +169,12 @@ export class BaileysService {
 
         if (from.includes('@lid') && (msg.key as any).remoteJidAlt) {
             from = jidNormalizedUser((msg.key as any).remoteJidAlt);
+        }
+
+        // Check if chat is labeled IGNORAR
+        if (this.isChatIgnored(botId, from)) {
+            console.log(`[Baileys] Ignoring message from ${from} — labeled IGNORAR`);
+            return;
         }
 
         // Extract content
@@ -331,6 +366,20 @@ export class BaileysService {
         return sessions.get(botId);
     }
 
+    private static isChatIgnored(botId: string, chatJid: string): boolean {
+        const labels = botLabels.get(botId);
+        const chats = chatLabels.get(botId);
+        if (!labels || !chats) return false;
+
+        const labelIds = chats.get(chatJid);
+        if (!labelIds) return false;
+
+        for (const labelId of labelIds) {
+            if (labels.get(labelId)?.toUpperCase() === 'IGNORAR') return true;
+        }
+        return false;
+    }
+
     static async stopSession(botId: string) {
         const sock = sessions.get(botId);
         if (sock) {
@@ -342,6 +391,8 @@ export class BaileysService {
             sessions.delete(botId);
         }
         qrCodes.delete(botId);
+        botLabels.delete(botId);
+        chatLabels.delete(botId);
 
         const sessionDir = path.join(AUTH_DIR, botId);
         if (fs.existsSync(sessionDir)) {
